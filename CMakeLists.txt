@@ -83,10 +83,11 @@ endforeach()
 find_program(CLANG_FORMAT_EXE NAMES clang-format)
 if (CLANG_FORMAT_EXE)
   add_custom_target(cfmt
+    # Use absolute paths so that invoking from the build directory works.
     COMMAND ${CLANG_FORMAT_EXE} -i -style=file
             ${TQDM_SOURCES}
             ${TQDM_SRC_DIR}/main.c
-            test/test-core.c
-            test/test-macros.c
+            ${CMAKE_SOURCE_DIR}/test/test-core.c
+            ${CMAKE_SOURCE_DIR}/test/test-macros.c
     COMMENT "Formatting source files with clang-format")
 endif()
