@@ -1,13 +1,16 @@
-`tqdm` is a product of collaborative work.
-Unless otherwise stated, all authors (see commit logs) retain copyright
-for their respective work, and release the work under the MIT licence
-(text below).
+`tqdm.c` - A C port of the popular Python tqdm library.
 
-Exceptions or notable authors are listed below
-in reverse chronological order:
+This C implementation is created and maintained by Akul Datta.
+Original tqdm is a product of collaborative work by the tqdm team.
 
+Unless otherwise stated, all authors retain copyright for their respective work, 
+and release the work under the MIT licence (text below).
+
+Notable authors and contributors:
+
+* 2025 (c) Akul Datta - C port implementation
 * MPLv2.0 (text below) 2015-2016 (c) Casper da Costa-Luis
-  [casperdcl](https://github.com/casperdcl).
+  [casperdcl](https://github.com/casperdcl) - Original tqdm implementation.
 
 
 Mozilla Public Licence (MPL) v. 2.0 - Exhibit A
