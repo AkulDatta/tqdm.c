@@ -54,10 +54,10 @@ target_link_libraries(tqdm PRIVATE tqdmlib)
 # =====
 # Tests
 # =====
-add_executable(test_tqdm   test/test-example.c)
+add_executable(test_core   test/test-core.c)
 add_executable(test_macros test/test-macros.c)
 
-target_link_libraries(test_tqdm   PRIVATE tqdmlib)
+target_link_libraries(test_core   PRIVATE tqdmlib)
 target_link_libraries(test_macros PRIVATE tqdmlib)
 
 # =========
@@ -66,11 +66,11 @@ target_link_libraries(test_macros PRIVATE tqdmlib)
 enable_testing()
 
 # Register test binaries with CTest so they can be invoked via `ctest`.
-add_test(NAME unit_core    COMMAND test_tqdm)
+add_test(NAME unit_core    COMMAND test_core)
 add_test(NAME unit_macros  COMMAND test_macros)
 
 # Keep quick feedback during normal builds
-foreach(test_target IN ITEMS test_tqdm test_macros)
+foreach(test_target IN ITEMS test_core test_macros)
   add_custom_command(TARGET ${test_target}
                      POST_BUILD
                      COMMAND $<TARGET_FILE:${test_target}>
@@ -86,7 +86,7 @@ if (CLANG_FORMAT_EXE)
     COMMAND ${CLANG_FORMAT_EXE} -i -style=file
             ${TQDM_SOURCES}
             ${TQDM_SRC_DIR}/main.c
-            test/test-example.c
+            test/test-core.c
             test/test-macros.c
     COMMENT "Formatting source files with clang-format")
 endif()

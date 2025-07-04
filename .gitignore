@@ -5,14 +5,8 @@ bin/
 lib/
 
 # Test directories
-test/
 examples/
 *_test/
-test-example
-test-example.dSYM/
-test-example.exe
-test-example.out
-
 # CMake
 CMakeCache.txt
 CMakeFiles/

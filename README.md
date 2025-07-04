@@ -7,6 +7,7 @@ Minimal C11 (C99 OK) *unofficial* port of Python's tqdm.  No dependencies beyond
 ```bash
 mkdir build && cd build
 cmake .. && make -j4        # builds lib + CLI + tests
+ctest -V                    # runs unit + macro tests
 ```
 
 ## Quick Start
@@ -37,7 +38,7 @@ cat file | tqdm --bytes --desc "copying"
 * Unicode or ASCII bars, colour, custom format.
 * Thread-safe, zero malloc in hot path.
 * Environment-variable config (e.g. `TQDM_MININTERVAL`).
-* Tested via CTest (core + macro suites).
+* Tested via CTest.
 
 ## Licence
 MIT

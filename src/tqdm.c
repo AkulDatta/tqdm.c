@@ -288,29 +288,39 @@ char *tqdm_format_interval(double t) {
 char *tqdm_format_num(double n) {
     char *result = malloc(32);
     
-    if (n == (double)(long long)n && n >= -1e15 && n <= 1e15) {
-        fast_format_int((long long)n, result, 32);
-        return result;
+    /* Human‐readable suffix formatting: k (thousand), m (million), b (billion), t (trillion).
+     * For numbers beyond 1e15 we fall back to scientific notation */
+    double absn = fabs(n);
+    const char *suffix = "";
+    double scaled = n;
+    if (absn >= 1e12 && absn < 1e15) {
+        suffix = "t";
+        scaled = n / 1e12;
+    } else if (absn >= 1e9) {
+        suffix = "b";
+        scaled = n / 1e9;
+    } else if (absn >= 1e6) {
+        suffix = "m";
+        scaled = n / 1e6;
+    } else if (absn >= 1e3) {
+        suffix = "k";
+        scaled = n / 1e3;
     }
-    
-    if (n >= 1e6 || n <= -1e6) {
-        snprintf(result, 32, "%.3g", n);
-    } else if (n >= 1000 || n <= -1000) {
-        snprintf(result, 32, "%.0f", n);
-    } else if (n >= 100 || n <= -100) {
-        snprintf(result, 32, "%.0f", n);
-    } else if (n >= 10 || n <= -10) {
-        if (n == (double)(int)n) {
-            snprintf(result, 32, "%.0f", n);
+
+    if (suffix[0] != '\0') {
+        if (fabs(scaled) >= 100) {
+            snprintf(result, 32, "%.0f%s", scaled, suffix);
+        } else if (fabs(scaled) >= 10) {
+            snprintf(result, 32, "%.1f%s", scaled, suffix);
         } else {
-            snprintf(result, 32, "%.1f", n);
+            snprintf(result, 32, "%.2f%s", scaled, suffix);
         }
+    } else if (absn < 1000 && n == (double)(long long)n) {
+        fast_format_int((long long)n, result, 32);
+    } else if (absn < 1e15) {
+        snprintf(result, 32, "%.0f", n);
     } else {
-        if (n == (double)(int)n) {
-            snprintf(result, 32, "%.0f", n);
-        } else {
-            snprintf(result, 32, "%.2f", n);
-        }
+        snprintf(result, 32, "%.3g", n);
     }
     
     return result;
@@ -356,7 +366,12 @@ char *tqdm_format_meter(size_t n, size_t total, double elapsed,
             total_str = malloc(2);
             strcpy(total_str, "?");
         }
-        rate_str = tqdm_format_sizeof(rate, unit, unit_divisor);
+        if (rate <= 0) {
+            rate_str = malloc(2);
+            strcpy(rate_str, "?");
+        } else {
+            rate_str = tqdm_format_sizeof(rate, unit, unit_divisor);
+        }
     } else {
         n_str = tqdm_format_num((double)n);
         if (total > 0) {
@@ -365,7 +380,12 @@ char *tqdm_format_meter(size_t n, size_t total, double elapsed,
             total_str = malloc(2);
             strcpy(total_str, "?");
         }
-        rate_str = tqdm_format_num(rate);
+        if (rate <= 0) {
+            rate_str = malloc(2);
+            strcpy(rate_str, "?");
+        } else {
+            rate_str = tqdm_format_num(rate);
+        }
     }
     
     int estimated_fixed = 50;
@@ -429,12 +449,13 @@ char *tqdm_format_meter(size_t n, size_t total, double elapsed,
     const char *desc_part = prefix && strlen(prefix) > 0 ? prefix : "";
     const char *desc_sep = prefix && strlen(prefix) > 0 ? ": " : "";
     const char *unit_str = unit ? unit : "it";
+    const char *rate_unit_suffix = unit_scale ? "" : unit_str;
     const char *postfix_sep = postfix && strlen(postfix) > 0 ? " " : "";
     const char *postfix_str = postfix ? postfix : "";
     
     snprintf(result, 1024, "%s%s%3.0f%%|%s| %s/%s [%s<%s, %s%s/s]%s%s",
              desc_part, desc_sep, percentage, bar, n_str, total_str,
-             elapsed_str, remaining_str, rate_str, unit_str,
+             elapsed_str, remaining_str, rate_str, rate_unit_suffix,
              postfix_sep, postfix_str);
     
     free(bar);
@@ -1034,40 +1055,7 @@ static void tqdm_print_progress(tqdm_t *tqdm) {
     double current_time = current_time_seconds();
     double elapsed = current_time - tqdm->start_time - tqdm->total_pause_time;
     
-    double rate = 0.0;
-    if (elapsed > 0) {
-        if (fabs(current_time - tqdm->last_rate_calc_time) < 0.1 && 
-            tqdm->last_rate_calc_n == tqdm->n) {
-            rate = tqdm->cached_rate;
-        } else {
-            double instantaneous_rate = (double)tqdm->n / elapsed;
-            
-            tqdm->rate_history[tqdm->rate_history_idx] = instantaneous_rate;
-            tqdm->rate_history_idx = (tqdm->rate_history_idx + 1) % tqdm->rate_history_size;
-            
-            double sum = 0.0;
-            double weight_sum = 0.0;
-            double weight = 1.0;
-            
-            for (size_t i = 0; i < tqdm->rate_history_size; i++) {
-                if (tqdm->rate_history[i] > 0) {
-                    sum += tqdm->rate_history[i] * weight;
-                    weight_sum += weight;
-                    weight *= tqdm->params.smoothing;
-                }
-            }
-            
-            if (weight_sum > 0) {
-                rate = sum / weight_sum;
-            } else {
-                rate = instantaneous_rate;
-            }
-            
-            tqdm->cached_rate = rate;
-            tqdm->last_rate_calc_time = current_time;
-            tqdm->last_rate_calc_n = tqdm->n;
-        }
-    }
+    double rate = (elapsed > 1e-6) ? (double)tqdm->n / elapsed : 0.0;
     
     int ncols = tqdm->params.ncols;
     if (ncols <= 0 || tqdm->params.dynamic_ncols) {
