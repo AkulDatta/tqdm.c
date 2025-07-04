@@ -1,4 +1,4 @@
-# tqdm.c – Tiny, Fast Progress-Bars for C
+# tqdm.c — Professional, Fast, Minimal Progress Bars for C
 
 Minimal C11 (C99 OK) *unofficial* port of Python's tqdm.  No dependencies beyond the C standard library + pthreads.
 
