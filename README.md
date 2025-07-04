@@ -35,7 +35,7 @@ cat file | tqdm --bytes --desc "copying"
 ```
 
 ## Features
-* Unicode or ASCII bars, colour, custom format.
+* Unicode or ASCII bars, color, custom format.
 * Thread-safe, zero malloc in hot path.
 * Environment-variable config (e.g. `TQDM_MININTERVAL`).
 * Tested via CTest.
