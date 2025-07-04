@@ -7,7 +7,7 @@ Minimal C11 (C99 OK) *unofficial* port of Python's tqdm.  No dependencies beyond
 ```bash
 mkdir build && cd build
 cmake .. && make -j4        # builds lib + CLI + tests
-ctest -V                    # runs unit + macro tests
+# ctest -V                    # runs unit + macro tests
 ```
 
 ## Quick Start
